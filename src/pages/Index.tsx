@@ -1,7 +1,7 @@
-import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
+import BrokerPortal from "./BrokerPortal";
 
 const Index = () => {
-  return <OnboardingWizard />;
+  return <BrokerPortal />;
 };
 
 export default Index;
