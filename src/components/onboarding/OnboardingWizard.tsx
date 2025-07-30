@@ -44,13 +44,38 @@ const steps = [
   "Complete"
 ];
 
-export const OnboardingWizard = () => {
+interface OnboardingWizardProps {
+  prefilledData?: {
+    customerType: "Business" | "Consumer" | null;
+    premiumAmount: number | null;
+    apr: number | null;
+    brokerName: string;
+  };
+}
+
+export const OnboardingWizard = ({ prefilledData }: OnboardingWizardProps) => {
   const [currentStep, setCurrentStep] = useState(0);
+  
+  // Calculate monthly amount based on prefilled data
+  const calculateMonthlyAmount = (premium: number, apr: number) => {
+    const monthlyRate = apr / 100 / 12;
+    const termMonths = 12;
+    
+    if (monthlyRate === 0) {
+      return premium / termMonths;
+    }
+    
+    return (premium * monthlyRate * Math.pow(1 + monthlyRate, termMonths)) / 
+           (Math.pow(1 + monthlyRate, termMonths) - 1);
+  };
+  
   const [data, setData] = useState<Partial<OnboardingData>>({
     policy: {
-      premium: 1200,
-      brokerName: "SecureShield Insurance",
-      monthlyAmount: 120
+      premium: prefilledData?.premiumAmount || 1200,
+      brokerName: prefilledData?.brokerName || "SecureShield Insurance",
+      monthlyAmount: prefilledData?.premiumAmount && prefilledData?.apr 
+        ? calculateMonthlyAmount(prefilledData.premiumAmount, prefilledData.apr)
+        : 120
     }
   });
   const [isDeclined, setIsDeclined] = useState(false);
