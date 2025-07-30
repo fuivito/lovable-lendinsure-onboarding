@@ -4,13 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Plus, Users, Building2, Search } from "lucide-react";
+import { Plus, Users, Building2 } from "lucide-react";
 import { AddCustomerModal } from "@/components/broker/AddCustomerModal";
-import { useNavigate } from "react-router-dom";
 
 export type CustomerType = "Business" | "Consumer";
-export type ApplicationStatus = "In Progress" | "Approved" | "Declined" | "Pending";
+export type ApplicationStatus = "In Progress" | "Approved" | "Declined";
 
 export interface CustomerApplication {
   id: string;
@@ -24,9 +22,7 @@ export interface CustomerApplication {
 }
 
 const BrokerPortal = () => {
-  const navigate = useNavigate();
   const [filterType, setFilterType] = useState<CustomerType | "All">("All");
-  const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [applications, setApplications] = useState<CustomerApplication[]>([
     {
@@ -35,7 +31,7 @@ const BrokerPortal = () => {
       type: "Consumer",
       status: "Approved",
       loanAmount: 1200,
-      instalmentPlan: "£100 x 12",
+      instalmentPlan: "12 months",
       apr: 4.5,
       createdAt: new Date("2024-01-15")
     },
@@ -45,7 +41,7 @@ const BrokerPortal = () => {
       type: "Business",
       status: "In Progress",
       loanAmount: 5000,
-      instalmentPlan: "£208 x 24",
+      instalmentPlan: "24 months",
       apr: 6.2,
       createdAt: new Date("2024-01-20")
     },
@@ -55,37 +51,21 @@ const BrokerPortal = () => {
       type: "Consumer", 
       status: "Declined",
       loanAmount: 800,
-      instalmentPlan: "£133 x 6",
+      instalmentPlan: "6 months",
       apr: 3.8,
       createdAt: new Date("2024-01-22")
-    },
-    {
-      id: "4",
-      name: "Manchester Motors Ltd",
-      type: "Business",
-      status: "Pending",
-      loanAmount: 3500,
-      instalmentPlan: "£292 x 12",
-      apr: 5.5,
-      createdAt: new Date("2024-01-25")
     }
   ]);
 
-  const filteredApplications = applications.filter(app => {
-    const matchesType = filterType === "All" || app.type === filterType;
-    const matchesSearch = searchTerm === "" || 
-      app.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      app.status.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesType && matchesSearch;
-  });
+  const filteredApplications = applications.filter(app => 
+    filterType === "All" || app.type === filterType
+  );
 
   const getStatusBadgeVariant = (status: ApplicationStatus) => {
     switch (status) {
       case "Approved": return "default";
       case "In Progress": return "secondary";
       case "Declined": return "destructive";
-      case "Pending": return "outline";
-      default: return "outline";
     }
   };
 
@@ -94,16 +74,10 @@ const BrokerPortal = () => {
     premiumAmount: number;
     apr: number;
   }) => {
-    // Navigate to onboarding flow with pre-filled data
-    const params = new URLSearchParams({
-      type: customerData.type,
-      premium: customerData.premiumAmount.toString(),
-      apr: customerData.apr.toString(),
-      broker: "Your Insurance Broker"
-    });
-    
-    navigate(`/onboarding?${params.toString()}`);
+    // This would normally integrate with the onboarding wizard
+    console.log("Starting financing flow for:", customerData);
     setIsAddModalOpen(false);
+    // You can add logic here to redirect to onboarding with pre-filled data
   };
 
   return (
@@ -161,7 +135,7 @@ const BrokerPortal = () => {
           </Card>
         </div>
 
-        {/* Filters and Search */}
+        {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <Select value={filterType} onValueChange={(value) => setFilterType(value as CustomerType | "All")}>
             <SelectTrigger className="w-full sm:w-48">
@@ -173,59 +147,48 @@ const BrokerPortal = () => {
               <SelectItem value="Business">Business</SelectItem>
             </SelectContent>
           </Select>
-          
-          <div className="relative flex-1 sm:max-w-sm">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search customers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
-          </div>
         </div>
 
+        {/* Applications Table */}
         <Card>
           <CardHeader>
-            <CardTitle>Customer Applications ({filteredApplications.length})</CardTitle>
+            <CardTitle>Customer Applications</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="cursor-pointer hover:bg-muted/50">Customer Name</TableHead>
-                    <TableHead className="cursor-pointer hover:bg-muted/50">Type</TableHead>
-                    <TableHead className="cursor-pointer hover:bg-muted/50">Premium Amount</TableHead>
-                    <TableHead className="cursor-pointer hover:bg-muted/50">Instalment Terms</TableHead>
-                    <TableHead className="cursor-pointer hover:bg-muted/50">APR</TableHead>
-                    <TableHead className="cursor-pointer hover:bg-muted/50">Status</TableHead>
-                    <TableHead className="cursor-pointer hover:bg-muted/50">Date Applied</TableHead>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Customer Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Loan Amount</TableHead>
+                  <TableHead>Instalment Plan</TableHead>
+                  <TableHead>APR</TableHead>
+                  <TableHead>Date Applied</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredApplications.map((application) => (
+                  <TableRow key={application.id}>
+                    <TableCell className="font-medium">{application.name}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="font-normal">
+                        {application.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(application.status)}>
+                        {application.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>£{application.loanAmount.toLocaleString()}</TableCell>
+                    <TableCell>{application.instalmentPlan}</TableCell>
+                    <TableCell>{application.apr}%</TableCell>
+                    <TableCell>{application.createdAt.toLocaleDateString()}</TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredApplications.map((application) => (
-                    <TableRow key={application.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">{application.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="font-normal">
-                          {application.type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">£{application.loanAmount.toLocaleString()}</TableCell>
-                      <TableCell>{application.instalmentPlan}</TableCell>
-                      <TableCell>{application.apr}%</TableCell>
-                      <TableCell>
-                        <Badge variant={getStatusBadgeVariant(application.status)}>
-                          {application.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{application.createdAt.toLocaleDateString()}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
 
